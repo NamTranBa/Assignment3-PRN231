@@ -1,0 +1,86 @@
+﻿@model IEnumerable<BusinessObject.Models.Product>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<div class="container-fluid">
+    <h2>Product List</h2>
+    <table class="table table-sm table-striped table-bordered m-2">
+        <thead>
+         <tr>
+                <th>ProductID</th>
+                <th>Category </th>
+                <th>Product Name</th>
+                <th>Weight</th>
+                <th>Unit Price</th>
+                <th>Units In Stock</th>
+                <th>Update</th>
+                <th>Delete</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        ShowAllProducts();
+
+        function ShowAllProducts() {
+            $("table tbody").html("");
+            $.ajax({
+                url: "http://localhost:33147/api/Products",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (result, status, xhr) {
+                    $.each(result, function (index, value) {
+                        var categoryName = value.category ? value.category.categoryName : ""; // Kiểm tra nếu category tồn tại
+                        var row = $("<tr></tr>");
+                        row.append($("<td>").text(value.productId));
+                        row.append($("<td>").text(categoryName));
+                        row.append($("<td>").text(value.productName));
+                        row.append($("<td>").text(value.weight));
+                        row.append($("<td>").text(value.unitPrice));
+                        row.append($("<td>").text(value.unitsInStock));
+                        // Tạo URL chuyển hướng cho trang Edit
+                        var editUrl = "/Products/Edit/" + value.productId; // Thay đổi đường dẫn này tùy thuộc vào cấu trúc URL của bạn
+                        row.append($("<td>").html("<a href='" + editUrl + "'><img class='edit' src='icon/edit.jpg' /></a>"));
+                        row.append($("<td>").html("<img class='delete' src='icon/delete.jpg' data-product-id='" + value.productId + "'/>"));
+                        $("table tbody").append(row);
+                    });
+                    $("img.edit, img.delete").css({
+                        "width": "25px",
+                        "height": "auto",
+                        "cursor": "pointer"
+                    });
+                },
+                error: function (xhr, status, error) {
+                    console.error(xhr);
+                }
+            });
+        }
+
+        $("table").on("click", "img.delete", function () {
+            var productId = $(this).closest("tr").find("td:nth-child(1)").text();
+            $.ajax({
+                url: "http://localhost:33147/api/Products/" + productId,
+                type: "DELETE", 
+                contentType: "application/json",
+                success: function (result, status, xhr) {
+                    ShowAllProducts();
+                },
+                error: function (xhr, status, error) {
+                    console.error(xhr);
+                }
+            });
+        });
+    });
+</script>
+

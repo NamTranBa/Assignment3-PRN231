@@ -1,0 +1,141 @@
+﻿@model BusinessObject.DTO.OrderComposeDTO
+
+@{
+    ViewData["Title"] = "Create";
+    var memberId = ViewData["MemberId"]?.ToString() ?? "Unknown";
+}
+
+<h1>Create</h1>
+
+<h4>Order</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create" id="createOrderForm">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <input type="hidden" asp-for="MemberId" class ="form-control" value="@memberId" />
+            </div>
+            <div class="form-group">
+                <label asp-for="ProductId" class="control-label"></label>
+                <select asp-for="ProductId" class="form-control" id="ProductId"></select>
+                <span asp-validation-for="ProductId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="OrderDate" class="control-label"></label>
+                <input asp-for="OrderDate" class="form-control" />
+                <span asp-validation-for="OrderDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="RequiredDate" class="control-label"></label>
+                <input asp-for="RequiredDate" class="form-control" />
+                <span asp-validation-for="RequiredDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ShippedDate" class="control-label"></label>
+                <input asp-for="ShippedDate" class="form-control" />
+                <span asp-validation-for="ShippedDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Freight" class="control-label"></label>
+                <input asp-for="Freight" class="form-control" />
+                <span asp-validation-for="Freight" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="UnitPrice" class="control-label"></label>
+                <input asp-for="UnitPrice" class="form-control" />
+                <span asp-validation-for="UnitPrice" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Quantity" class="control-label"></label>
+                <input asp-for="Quantity" class="form-control" />
+                <span asp-validation-for="Quantity" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Discount" class="control-label"></label>
+                <input asp-for="Discount" class="form-control" />
+                <span asp-validation-for="Discount" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        function loadProducts() {
+            $.getJSON('http://localhost:33147/api/Products', function (products) {
+                var select = $('#ProductId').empty();
+                products.forEach(function (product) {
+                    $('<option>').val(product.productId).text(product.productName).appendTo(select);
+                });
+            }).fail(function () {
+                alert('Không thể tải danh mục sản phẩm');
+            });
+        }
+
+        function submitOrderForm() {
+            $('#createOrderForm').on('submit', function (e) {
+                e.preventDefault();
+                var formDataArray = $(this).serializeArray();
+                var orderData = {};
+                formDataArray.forEach(function (item) {
+                    orderData[item.name] = item.value;
+                });
+
+                var orderJsonData = JSON.stringify(orderData);
+
+                $.ajax({
+                    url: 'http://localhost:33147/api/Orders',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: orderJsonData,
+                    success: function (orderResponse) {
+                        console.log('Order created successfully', orderResponse);
+                        // Tạo OrderDetails ở đây với orderResponse.orderId
+                        var orderDetailsData = {
+                            OrderId: orderResponse.orderId,
+                            ProductId: orderData.ProductId,
+                            UnitPrice: orderData.UnitPrice,
+                            Quantity: orderData.Quantity,
+                            Discount: orderData.Discount
+                        };
+                        var orderDetailsJsonData = JSON.stringify(orderDetailsData);
+                        $.ajax({
+                            url: 'http://localhost:33147/api/OrderDetails',
+                            type: 'POST',
+                            contentType: 'application/json',
+                            data: orderDetailsJsonData,
+                            success: function () {
+                                alert('Order and OrderDetails created successfully');
+                                window.location.href = '/Orders/Index';
+                            },
+                            error: function (xhr) {
+                                alert('Error creating OrderDetails: ' + xhr.responseJSON?.message || xhr.statusText);
+                            }
+                        });
+                    },
+                    error: function (xhr) {
+                        alert('Error creating Order: ' + xhr.responseJSON?.message || xhr.statusText);
+                    }
+                });
+            });
+        }
+        $(document).ready(function () {
+            loadProducts();
+            submitOrderForm();
+        });
+    </script>
+}
+
+

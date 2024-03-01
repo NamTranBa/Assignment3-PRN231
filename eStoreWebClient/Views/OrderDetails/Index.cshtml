@@ -1,0 +1,89 @@
+﻿@model IEnumerable<BusinessObject.Models.OrderDetail>
+
+@{
+    ViewData["Title"] = "Index";
+    var orderId = ViewData["OrderId"] ?? "Unknown";
+}
+
+<h1>Index</h1>
+<style>
+    .table img.delete, .table img.edit {
+        width: 25px; /* Điều chỉnh kích thước theo nhu cầu */
+        height: auto; /* Duy trì tỉ lệ */
+        cursor: pointer; /* Chỉ báo có thể click */
+    }
+</style>
+<p>
+    <a asp-action="Create" asp-route-id="@orderId">Create New</a>
+</p>
+
+<div class="container-fluid">
+    <h2>OrderDetails</h2>
+    <table class="table table-sm table-striped table-bordered m-2">
+        <thead>
+            <tr>
+                <th>OrderId</th>
+                <th>Productid</th>
+                <th>Unit Price</th>
+                <th>Quantity</th>
+                <th>Discount</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        ShowAllOrders();
+
+        function ShowAllOrders() {
+
+            $("table tbody").html("");
+            $.ajax({
+                url: "http://localhost:33147/api/OrderDetails/" + @orderId,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (result, status, xhr) {
+                    $.each(result, function (index, value) {
+                        var row = $("<tr></tr>");
+                        row.append($("<td>").text(value.orderId));
+                        row.append($("<td>").text(value.productId));
+                        row.append($("<td>").text(value.unitPrice));
+                        row.append($("<td>").text(value.quantity));
+                        row.append($("<td>").text(value.discount));
+
+                        var editUrl = "/OrderDetails/Edit?oid=" + value.orderId + "&pid=" + value.productId;
+                        row.append($("<td>").html("<a href='" + editUrl + "'><img class='edit' src='icon/edit.jpg' /></a>"));
+                        row.append($("<td>").html("<img class='delete' src='icon/delete.jpg' data-product-id='" + value.orderId + "'/>"));
+                        $("table tbody").append(row);
+                    });
+
+                    $("img.edit, img.delete").css({
+                        "width": "25px",
+                        "height": "auto",
+                        "cursor": "pointer"
+                    });
+
+                },
+                error: function (xhr, status, error) {
+                    console.error(xhr);
+                }
+            });
+        }
+        $("table").on("click", "img.delete", function () {
+            var oid = $(this).closest("tr").find("td:nth-child(1)").text();
+            var productId = $(this).closest("tr").find("td:nth-child(2)").text();
+            $.ajax({
+                url: "http://localhost:33147/api/OrderDetails?oid=" + oid + "&pid=" + productId,
+                type: "DELETE",
+                contentType: "application/json",
+                success: function (result, status, xhr) {
+                    ShowAllOrders();
+                },
+                error: function (xhr, status, error) {
+                    console.error(xhr);
+                }
+            });
+        });
+    });
+</script>

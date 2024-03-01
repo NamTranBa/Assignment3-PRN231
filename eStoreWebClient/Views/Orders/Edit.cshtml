@@ -1,0 +1,79 @@
+﻿@model BusinessObject.DTO.OrderDTO
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<h4>Order</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit" id="editProductForm">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="OrderId" />
+            <input type="hidden" asp-for="MemberId" class="form-control" />
+            <div class="form-group">
+                <label asp-for="OrderDate" class="control-label"></label>
+                <input asp-for="OrderDate" class="form-control" />
+                <span asp-validation-for="OrderDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="RequiredDate" class="control-label"></label>
+                <input asp-for="RequiredDate" class="form-control" />
+                <span asp-validation-for="RequiredDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ShippedDate" class="control-label"></label>
+                <input asp-for="ShippedDate" class="form-control" />
+                <span asp-validation-for="ShippedDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Freight" class="control-label"></label>
+                <input asp-for="Freight" class="form-control" />
+                <span asp-validation-for="Freight" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $('#editProductForm').on('submit', function (e) {
+            e.preventDefault();
+
+            var formData = $(this).serializeArray();
+            var dataObject = {};
+            formData.forEach(function (item) {
+                dataObject[item.name] = item.value;
+            });
+            var orderId = '@Model.OrderId'
+            var jsonData = JSON.stringify(dataObject);
+            $.ajax({
+                url: "http://localhost:33147/api/Orders/" + orderId, // Lấy URL từ thuộc tính 'action' của form
+                type: 'PUT',
+                contentType: 'application/json', // Chỉ định loại nội dung là JSON
+                data: jsonData, // Sử dụng jsonData ở đây
+                success: function (response) {
+                    console.log('Product created successfully');
+                    window.location.href = '/Orders/Index'
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error creating product: ' + error);
+                    // Xử lý lỗi
+                }
+            });
+        });
+    </script>
+}

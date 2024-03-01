@@ -1,0 +1,86 @@
+﻿@model IEnumerable<BusinessObject.Models.Order>
+
+@{
+    ViewData["Title"] = "Index";
+    var memberId = ViewData["MemberId"]?.ToString() ?? "Unknown";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<div class="container-fluid">
+    <h2>Orders List</h2>
+    <table class="table table-sm table-striped table-bordered m-2">
+        <thead>
+            <tr>
+                <th>OrderId</th>
+                <th>OrderDate</th>
+                <th>RequiredDate</th>
+                <th>ShippedDate</th>
+                <th>Freight</th>
+                <th>UserName</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        var memberId = @Html.Raw(Json.Serialize(memberId));
+        ShowAllOrders();
+
+        function ShowAllOrders() {
+
+            $("table tbody").html("");
+            $.ajax({
+                url: "http://localhost:33147/api/Orders?id=" + memberId,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (result, status, xhr) {
+                    $.each(result, function (index, value) {
+                        var userName = value.user ? value.user.userName : "";
+                        var row = $("<tr></tr>");
+                        row.append($("<td>").text(value.orderId));
+                        row.append($("<td>").text(value.orderDate));
+                        row.append($("<td>").text(value.requiredDate));
+                        row.append($("<td>").text(value.shippedDate));
+                        row.append($("<td>").text(value.freight));
+                        row.append($("<td>").text(userName));
+                        var editUrl = "/Orders/Edit/" + value.orderId;
+                        var orderDetails = "/OrderDetails/Index/" + value.orderId;
+                        row.append($("<td>").html("<a href='" + editUrl + "'><img class='edit' src='icon/edit.jpg' /></a>"));
+                        row.append($("<td>").html("<a href='" + orderDetails + "'><img class='details' src='icon/details.jpg' /></a>"));
+                        row.append($("<td>").html("<img class='delete' src='icon/delete.jpg' data-product-id='" + value.orderId + "'/>"));
+                        $("table tbody").append(row);
+                    });
+                    $("img.edit, img.delete, img.details").css({
+                        "width": "25px",
+                        "height": "auto",
+                        "cursor": "pointer"
+                    });
+                },
+                error: function (xhr, status, error) {
+                    console.error(xhr);
+                }
+            });
+        }
+        $("table").on("click", "img.delete", function () {
+            var orderId = $(this).closest("tr").find("td:nth-child(1)").text();
+            $.ajax({
+                url: "http://localhost:33147/api/Orders/" + orderId,
+                type: "DELETE",
+                contentType: "application/json",
+                success: function (result, status, xhr) {
+                    ShowAllOrders();
+                },
+                error: function (xhr, status, error) {
+                    console.error(xhr);
+                }
+            });
+        });
+    });
+</script>
